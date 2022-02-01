@@ -11,7 +11,7 @@ contract LinkedList {
     mapping(bytes32 => Node) private _nodes;
     uint256 private _length;
     bytes32 private _head;
-    bytes32 private _prevNodeId;
+    bytes32 private _tail;
 
     constructor(uint256 data) {
         Node memory n = Node(_head, data);
@@ -20,7 +20,7 @@ contract LinkedList {
 
         _nodes[id] = n;
         _head = id;
-        _prevNodeId = id;
+        _tail = id;
         _length = 1;
     }
 
@@ -47,8 +47,8 @@ contract LinkedList {
         bytes32 id = keccak256(abi.encodePacked(data, _length, block.timestamp));
 
         _nodes[id] = n;
-        _nodes[_prevNodeId].next = id;
-        _prevNodeId = id;
+        _nodes[_tail].next = id;
+        _tail = id;
         _length += 1;
         return id;
     }
