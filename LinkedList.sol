@@ -7,77 +7,83 @@ contract LinkedList {
         uint256 data;
     }
 
-    mapping(bytes32 => Node) private nodes;
-    uint256 private length;
-    bytes32 private head;
-    bytes32 private prevNodeId;
+    // "_" is used when declaring private variables
+    mapping(bytes32 => Node) private _nodes;
+    uint256 private _length;
+    bytes32 private _head;
+    bytes32 private _prevNodeId;
 
-    constructor(uint256 _data) {
-        Node memory n = Node(head, _data);
+    constructor(uint256 data) {
+        Node memory n = Node(_head, data);
 
-        bytes32 id = keccak256(abi.encodePacked(_data, length, block.timestamp));
+        bytes32 id = keccak256(abi.encodePacked(data, _length, block.timestamp));
 
-        nodes[id] = n;
-        head = id;
-        prevNodeId = id;
-        length = 1;
+        _nodes[id] = n;
+        _head = id;
+        _prevNodeId = id;
+        _length = 1;
     }
 
-    function getNode(bytes32 _id) public view returns(Node memory) {
-        return nodes[_id];
+    function getNode(bytes32 id) public view returns(Node memory) {
+        return _nodes[id];
         // Q: Why "getter func" instead of `public`?
-        // A: https://ethereum.stackexchange.com/questions/67137/why-creating-a-private-variable-and-a-getter-instead-of-just-creating-a-public-v
+        // A1: https://ethereum.stackexchange.com/questions/67137/why-creating-a-private-variable-and-a-getter-instead-of-just-creating-a-public-v
+        // A2: Actually, there is no need since when we declare the variable as `public`, solidity already creates a getter function for it.
+        // However, we declared the variable as private so a getter is needed.
+        // For more: https://ethereum.stackexchange.com/a/25504/79733
     }
 
     function getLength() public view returns(uint256) {
-        return length;
+        return _length;
     }
 
     function getHead() public view returns(bytes32) {
-        return head;
+        return _head;
     }
 
-    function addNode(uint256 _data) public returns(bytes32) {
-        Node memory n = Node(0, _data);
+    function addNode(uint256 data) public returns(bytes32) {
+        Node memory n = Node(0, data);
 
-        bytes32 id = keccak256(abi.encodePacked(_data, length, block.timestamp));
+        bytes32 id = keccak256(abi.encodePacked(data, _length, block.timestamp));
 
-        nodes[id] = n;
-        nodes[prevNodeId].next = id;
-        prevNodeId = id;
-        length += 1;
+        _nodes[id] = n;
+        _nodes[_prevNodeId].next = id;
+        _prevNodeId = id;
+        _length += 1;
         return id;
     }
 
     function popHead() private returns(bool) {
-        bytes32 currHead = head;
+        bytes32 currHead = _head;
 
-        head = nodes[currHead].next;
+        _head = _nodes[currHead].next;
 
-        // delete's don't work for mappings so have to be set to 0
         // deleting is not necessary but we get partial refund
-        delete nodes[currHead];
+        delete _nodes[currHead];
+        _length -= 1;
         return true;
     }
 
-    function deleteNode(bytes32 _id) public returns(bool) {
-        if (head == _id) {
+    function deleteNode(bytes32 id) public returns(bool) {
+        if (_head == id) {
             popHead();
             return true;
         }
 
-        bytes32 curr = nodes[head].next;
-        bytes32 prev = head;
-
+        bytes32 curr = _nodes[_head].next;
+        bytes32 prev = _head;
+        uint256 length = _length;
+        
         // skipping node at index=0 (cuz its the head)
         for (uint256 i=1; i < length; i++) {
-            if (curr == _id) {
-                nodes[prev].next = nodes[curr].next;
-                delete nodes[curr];    
+            if (curr == id) {
+                _nodes[prev].next = _nodes[curr].next;
+                delete _nodes[curr];
+                _length -= 1;
                 return true;
             }
             prev = curr;
-            curr = nodes[prev].next;
+            curr = _nodes[prev].next;
         }
         revert("Node ID not found.");
     }
