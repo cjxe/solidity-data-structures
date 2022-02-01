@@ -41,7 +41,7 @@ contract LinkedList {
         return _head;
     }
 
-    function addNode(uint256 data) public returns(bytes32) {
+    function appendNode(uint256 data) public returns(bytes32) {
         Node memory n = Node(0, data);
 
         bytes32 id = keccak256(abi.encodePacked(data, _length, block.timestamp));
@@ -53,7 +53,7 @@ contract LinkedList {
         return id;
     }
 
-    function popHead() private returns(bool) {
+    function popHead() public returns(bool) {
         bytes32 currHead = _head;
 
         _head = _nodes[currHead].next;
